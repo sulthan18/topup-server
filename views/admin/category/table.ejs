@@ -7,24 +7,23 @@
     </tr>
   </thead>
   <tbody>
-    <% category.forEach((item, index) => { %>
-    <tr>
-      <td><%= index + 1 %></td>
-      <td><%= item.name %></td>
-      <td>
-        <form action="">
-          <!-- Edit Button -->
-          <a href="" class="btn btn-warning">
-            <i class="fas fa-pencil-alt"></i> Ubah
-          </a>
-
-          <!-- Delete Button -->
-          <button type="submit" class="btn btn-danger">
-            <i class="fas fa-trash"></i> Hapus
-          </button>
-        </form>
-      </td>
-    </tr>
-    <% }) %>
+    <% for(let i = 0; i < category.length; i++) { %>
+      <tr>
+        <td><%= i + 1 %></td>
+        <td><%= category[i].name %></td>
+        <td>
+          <form action="">
+            <a href="/category/edit/<%= category[i]._id %>" class="btn btn-warning">
+              <i class="fas fa-pencil-alt"></i>
+              Ubah
+            </a>
+            <button class="btn btn-danger">
+              <i class="fas fa-trash"></i>
+              Hapus
+            </button>
+          </form>
+        </td>
+      </tr>
+    <% } %>
   </tbody>
 </table>
