@@ -23,7 +23,7 @@ module.exports = {
     try {
       const { name } = req.body;
 
-      let category = await Category({ name });
+      let category = new Category({ name });
       await category.save();
 
       res.redirect("/category");
@@ -56,6 +56,17 @@ module.exports = {
         { name }
       );
 
+      res.redirect("/category");
+    } catch (err) {
+      console.log(err);
+    }
+  },
+  actionDelete: async (req, res) => {
+    try {
+      const { id } = req.params;
+      await Category.findOneAndDelete({
+        _id: id,
+      });
       res.redirect("/category");
     } catch (err) {
       console.log(err);
