@@ -34,15 +34,15 @@
           <% } %>
         </td>
         <td>
-            <form action="" style="display: inline-block;">
+            <form action="/voucher/status/<%= voucher[i]._id %>" method="POST" style="display: inline-block;">
                 <button class="btn btn-primary btn-sm">
                     <i class="fas fa-folder"></i>
                     <% if(voucher[i].status === 'Y') { %>
-                          Matikan
-                        <% } else { %>
-                          Hidupkan
-                        <% } %>
-                  </button>
+                        Matikan
+                    <% } else { %>
+                        Hidupkan
+                    <% } %>
+                </button>
             </form>
             <a href="/voucher/edit/<%= voucher[i]._id %>" class="btn btn-info btn-sm">
               <i class="fas fa-pencil-alt"></i> Ubah
