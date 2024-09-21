@@ -1,6 +1,6 @@
-<%- include('../../partials/header.ejs') %>
-<%- include('../../partials/navbar.ejs') %>
-<%- include('../../partials/sidebar.ejs') %>
+<%- include('../../partials/header.ejs') %> <%-
+include('../../partials/navbar.ejs') %> <%-
+include('../../partials/sidebar.ejs') %>
 
 <div class="content-wrapper">
   <!-- Content Header (Page header) -->
@@ -37,9 +37,7 @@
               </h3>
             </div>
             <!-- /.card-header -->
-            <div class="card-body">          
-                
-            </div>
+            <div class="card-body"><%- include('./table.ejs') %></div>
             <!-- /.card-body -->
           </div>
           <!-- /.card -->
@@ -53,5 +51,5 @@
   <!-- /.content -->
 </div>
 
-<%- include('../../partials/footer.ejs') %>
-<%- include('../../partials/js.ejs') %>
+<%- include('../../partials/footer.ejs') %> <%- include('../../partials/js.ejs')
+%>
