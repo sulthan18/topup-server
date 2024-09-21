@@ -80,4 +80,19 @@ module.exports = {
       res.redirect("/bank");
     }
   },
+  actionDelete: async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      await Bank.findByIdAndDelete(id);
+
+      req.flash("alertMessage", "Berhasil hapus bank");
+      req.flash("alertStatus", "success");
+      res.redirect("/bank");
+    } catch (err) {
+      req.flash("alertMessage", `${err.message}`);
+      req.flash("alertStatus", "danger");
+      res.redirect("/bank");
+    }
+  },
 };

@@ -1,5 +1,6 @@
-<%- include ../../partials/header.ejs %> <%- include ../../partials/navbar.ejs
-%> <%- include ../../partials/sidebar.ejs %>
+<%- include ../../partials/header.ejs %> 
+<%- include ../../partials/navbar.ejs %> 
+<%- include ../../partials/sidebar.ejs %>
 <div class="content-wrapper">
   <!-- Content Header (Page header) -->
   <section class="content-header">
@@ -39,7 +40,19 @@
                     </div>
                     <div class="form-group">
                       <label for="nameBank">Nama bank</label>
-                      <input type="text" name="nameBank" class="form-control" id="nameBank" placeholder="Masukkan nama bank" required>
+                      <select class="form-control select2" style="width: 100%;" name="nameBank" required>
+                          <option value="" disabled selected>Pilih bank</option>
+                          <option value="Bank Mandiri">Bank Mandiri</option>
+                          <option value="Bank Rakyat Indonesia (BRI)">Bank Rakyat Indonesia (BRI)</option>
+                          <option value="Bank Central Asia (BCA)">Bank Central Asia (BCA)</option>
+                          <option value="Bank Negara Indonesia (BNI)">Bank Negara Indonesia (BNI)</option>
+                          <option value="Bank Tabungan Negara (BTN)">Bank Tabungan Negara (BTN)</option>
+                          <option value="Bank Syariah Indonesia (BSI)">Bank Syariah Indonesia (BSI)</option>
+                          <option value="CIMB Niaga">CIMB Niaga</option>
+                          <option value="Permata Bank">Permata Bank</option>
+                          <option value="Panin Bank">Panin Bank</option>
+                          <option value="Bank Danamon">Bank Danamon</option>
+                      </select>
                     </div>
                     <div class="form-group">
                       <label for="noRekening">Nomor rekening</label>
@@ -59,4 +72,5 @@
   </section>
   <!-- /.content -->
 </div>
-<%- include ../../partials/footer.ejs %> <%- include ../../partials/js.ejs %>
+<%- include ../../partials/footer.ejs %> 
+<%- include ../../partials/js.ejs %>
