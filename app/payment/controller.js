@@ -92,7 +92,7 @@ module.exports = {
     try {
       const { id } = req.params;
 
-      await Payment.findByIdAndDelete(id);
+      await Payment.findByIdAndDelete(id); 
       req.flash("alertMessage", "Successfully deleted payment");
       req.flash("alertStatus", "success");
 
