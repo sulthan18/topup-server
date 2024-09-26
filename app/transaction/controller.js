@@ -9,7 +9,7 @@ module.exports = {
         message: alertMessage,
         status: alertStatus,
       };
-      const transaction = await Transaction.find();
+      const transaction = await Transaction.find().populate('player')
 
       res.render("admin/transaction/view_transaction", {
         transaction,
