@@ -1,59 +1,145 @@
+<div class="d-flex justify-content-between mb-3">
+  <div>
+    <label for="filterStatus">Filter Status: </label>
+    <select id="filterStatus" onchange="filterTransactions()">
+      <option value="all">Semua Status</option>
+      <option value="pending">Pending</option>
+      <option value="success">Success</option>
+      <option value="failed">Failed</option>
+    </select>
+  </div>
+
+  <div>
+    <button onclick="exportToCSV()" class="btn btn-success btn-sm">
+      <i class="fas fa-file-csv"></i> Ekspor ke CSV
+    </button>
+  </div>
+</div>
+
 <table id="example2" class="table table-bordered table-hover">
-    <thead>
-      <tr>
-        <th>No.</th>
-        <th>Nama game</th>
-        <th>Item</th>
-        <th>Total harga</th>
-        <th>Status</th>
-        <th>Nama player</th>
-        <th>Aksi</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% for (let i = 0; i < transaction.length; i++) { %>
-      <tr>
-        <td><%= i + 1 %></td>
-        <td>
-          <ul class="list-inline">
-            <li class="list-inline-item">
-              <img width="48px" height="48px" src="http://localhost:3000/uploads/<%= transaction[i].historyVoucherTopup.thumbnail %>" alt="thumbnail">
-            </li>
-          </ul>
-          <%= transaction[i]?.historyVoucherTopup?.gameName %> <br>
-          <%= transaction[i]?.historyVoucherTopup?.category %>
-        </td>
-        <td>
-          <%= transaction[i]?.historyVoucherTopup?.coinQuantity %> 
-          <%= transaction[i]?.historyVoucherTopup?.coinName %>
-        </td>
-        <td>
-            <%= transaction[i].value %>
-        </td>
-        <td>
-          <% if(transaction[i].status === 'pending') { %>
-            <span class="badge badge-warning"><%= transaction[i].status %></span>
-          <% } else if(transaction[i].status === 'success') { %>
-            <span class="badge badge-success"><%= transaction[i].status %></span>
-          <% } else { %>
-            <span class="badge badge-danger"><%= transaction[i].status %></span>
-          <% } %>
-        </td>
-        <td><%= transaction[i].player?.name ?? '-' %></td>
-        <td>
-          <form action="/transaction/status/<%= transaction[i]._id %>?status=failed&_method=PUT" style="display: inline-block" method="POST">
-            <button class="btn btn-danger btn-sm">
-              <i class="fas fa-times-circle"></i> Tolak
-            </button>
-          </form>
-          <form action="/transaction/status/<%= transaction[i]._id %>?status=success&_method=PUT" style="display: inline-block" method="POST">
-            <button class="btn btn-info btn-sm">
-              <i class="fas fa-check"></i> Terima
-            </button>
-          </form>
-        </td>
-      </tr>
-      <% } %>
-    </tbody>
-  </table>
-  
+  <thead>
+    <tr>
+      <th>No.</th>
+      <th>Nama game</th>
+      <th>Item</th>
+      <th>Total harga</th>
+      <th>Status</th>
+      <th>Nama player</th>
+      <th>Aksi</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% for (let i = 0; i < transaction.length; i++) { %>
+    <tr class="transaction-row" data-status="<%= transaction[i].status %>">
+      <td><%= i + 1 %></td>
+      <td>
+        <ul class="list-inline">
+          <li class="list-inline-item">
+            <img
+              width="48px"
+              height="48px"
+              src="http://localhost:3000/uploads/<%= transaction[i].historyVoucherTopup.thumbnail %>"
+              alt="thumbnail"
+            />
+          </li>
+        </ul>
+        <%= transaction[i]?.historyVoucherTopup?.gameName %> <br />
+        <%= transaction[i]?.historyVoucherTopup?.category %>
+      </td>
+      <td>
+        <%= transaction[i]?.historyVoucherTopup?.coinQuantity %> <%=
+        transaction[i]?.historyVoucherTopup?.coinName %>
+      </td>
+      <td><%= transaction[i].value %></td>
+      <td>
+        <% if(transaction[i].status === 'pending') { %>
+        <span class="badge badge-warning"><%= transaction[i].status %></span>
+        <% } else if(transaction[i].status === 'success') { %>
+        <span class="badge badge-success"><%= transaction[i].status %></span>
+        <% } else { %>
+        <span class="badge badge-danger"><%= transaction[i].status %></span>
+        <% } %>
+      </td>
+      <td><%= transaction[i].player?.name ?? '-' %></td>
+      <td>
+        <% if(transaction[i].status === 'pending') { %>
+        <form
+          action="/transaction/status/<%= transaction[i]._id %>?status=failed&_method=PUT"
+          style="display: inline-block"
+          method="POST"
+        >
+          <button class="btn btn-danger btn-sm">
+            <i class="fas fa-times-circle"></i> Tolak
+          </button>
+        </form>
+        <form
+          action="/transaction/status/<%= transaction[i]._id %>?status=success&_method=PUT"
+          style="display: inline-block"
+          method="POST"
+        >
+          <button class="btn btn-info btn-sm">
+            <i class="fas fa-check"></i> Terima
+          </button>
+        </form>
+        <% } else { %>
+        <span class="text-muted">Tidak ada aksi</span>
+        <% } %>
+      </td>
+    </tr>
+    <% } %>
+  </tbody>
+</table>
+
+<script>
+  function filterTransactions() {
+    const filterValue = document.getElementById("filterStatus").value;
+    const rows = document.querySelectorAll(".transaction-row");
+
+    rows.forEach(function (row) {
+      const status = row.getAttribute("data-status");
+
+      if (filterValue === "all" || filterValue === status) {
+        row.style.display = "";
+      } else {
+        row.style.display = "none";
+      }
+    });
+  }
+
+  function exportToCSV() {
+    const csv = [];
+    const rows = document.querySelectorAll("table tr");
+
+    for (const i = 0; i < rows.length; i++) {
+      const row = [],
+        cols = rows[i].querySelectorAll("td, th");
+
+      for (const j = 0; j < cols.length; j++) {
+        row.push(cols[j].innerText);
+      }
+
+      csv.push(row.join(","));
+    }
+
+    downloadCSV(csv.join("\n"), "transaksi.csv");
+  }
+
+  function downloadCSV(csv, filename) {
+    let csvFile;
+    let downloadLink;
+
+    csvFile = new Blob([csv], { type: "text/csv" });
+
+    downloadLink = document.createElement("a");
+
+    downloadLink.download = filename;
+
+    downloadLink.href = window.URL.createObjectURL(csvFile);
+
+    downloadLink.style.display = "none";
+
+    document.body.appendChild(downloadLink);
+
+    downloadLink.click();
+  }
+</script>
