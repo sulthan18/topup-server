@@ -1,27 +1,46 @@
 const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
 
-let playerSchema = mongoose.Schema(
+const HASH_ROUND = 10;
+
+const validateUniqueEmail = async function (email) {
+  const emailCount = await mongoose.models.Player.countDocuments({ email });
+  return !emailCount;
+};
+
+const emailAlreadyRegisteredMessage = (props) =>
+  `${props.value} sudah terdaftar`;
+
+const playerSchema = new mongoose.Schema(
   {
     email: {
       type: String,
-      require: [true, "email harus diisi"],
+      required: [true, "Email harus diisi"],
+      unique: true,
+      validate: [
+        {
+          validator: validateUniqueEmail,
+          message: emailAlreadyRegisteredMessage,
+        },
+      ],
     },
     name: {
       type: String,
-      require: [true, "nama harus diisi"],
-      maxlength: [225, "panjang nama harus antara 3 - 225 karakter"],
-      minlength: [3, "panjang nama harus antara 3 -225 karakter"],
+      required: [true, "Nama harus diisi"],
+      maxlength: [225, "Panjang nama harus antara 3 - 225 karakter"],
+      minlength: [3, "Panjang nama harus antara 3 - 225 karakter"],
     },
     username: {
       type: String,
-      require: [true, "nama harus diisi"],
-      maxlength: [225, "panjang username harus antara 3 - 225 karakter"],
-      minlength: [3, "panjang username harus antara 3 -225 karakter"],
+      required: [true, "Username harus diisi"],
+      maxlength: [225, "Panjang username harus antara 3 - 225 karakter"],
+      minlength: [3, "Panjang username harus antara 3 - 225 karakter"],
     },
     password: {
       type: String,
-      maxlength: [225, "kata sandi harus diisi"],
-      minlength: [3, "panjang password maksimal 225 karakter"],
+      required: [true, "Password harus diisi"],
+      maxlength: [225, "Panjang password maksimal 225 karakter"],
+      minlength: [3, "Panjang password minimal 3 karakter"],
     },
     role: {
       type: String,
@@ -41,9 +60,9 @@ let playerSchema = mongoose.Schema(
     },
     phoneNumber: {
       type: String,
-      require: [true, "nomor telpon harus diisi"],
-      maxlength: [225, "panjang nomor telpon harus antara 9 - 13 karakter"],
-      minlength: [3, "panjang nomor telpon harus antara 9 - 13 karakter"],
+      required: [true, "Nomor telepon harus diisi"],
+      maxlength: [13, "Panjang nomor telepon harus antara 9 - 13 karakter"],
+      minlength: [9, "Panjang nomor telepon harus antara 9 - 13 karakter"],
     },
     favorite: {
       type: mongoose.Schema.Types.ObjectId,
@@ -54,5 +73,12 @@ let playerSchema = mongoose.Schema(
     timestamps: true,
   }
 );
+
+playerSchema.pre("save", async function (next) {
+  if (this.isModified("password")) {
+    this.password = await bcrypt.hash(this.password, HASH_ROUND);
+  }
+  next();
+});
 
 module.exports = mongoose.model("Player", playerSchema);
