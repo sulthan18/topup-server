@@ -52,7 +52,9 @@ module.exports = {
       const categories = await Category.find();
       res.status(200).json({ data: categories });
     } catch (err) {
-      res.status(500).json({ message: err.message || "Internal server error" });
+      res.status(500).json({
+        message: err.message || "Internal server error",
+      });
     }
   },
 
@@ -66,9 +68,9 @@ module.exports = {
         .populate("user");
 
       if (!res_voucher) {
-        return res
-          .status(404)
-          .json({ message: "Voucher game tidak ditemukan." });
+        return res.status(404).json({
+          message: "Voucher game tidak ditemukan.",
+        });
       }
 
       const res_nominal = await Nominal.findOne({ _id: nominal });
@@ -125,6 +127,48 @@ module.exports = {
       res.status(201).json({ data: transaction });
     } catch (err) {
       res.status(500).json({ message: err.message || "Internal server error" });
+    }
+  },
+
+  history: async (req, res) => {
+    try {
+      const { status = "" } = req.query;
+      let criteria = {};
+
+      if (status.length) {
+        criteria = {
+          ...criteria,
+          status: { $regex: `${status}`, $options: "i" },
+        };
+      }
+
+      if (req.player._id) {
+        criteria = {
+          ...criteria,
+          player: req.player._id,
+        };
+      }
+
+      const history = await Transaction.find(criteria);
+
+      let total = await Transaction.aggregate([
+        { $match: criteria },
+        {
+          $group: {
+            _id: null,
+            value: { $sum: "$value" },
+          },
+        },
+      ]);
+
+      res.status(200).json({
+        data: history,
+        total: total.length ? total[0].value : 0,
+      });
+    } catch (err) {
+      res.status(500).json({
+        message: err.message || "Internal server error",
+      });
     }
   },
 };
