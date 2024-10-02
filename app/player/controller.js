@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Player = require("./model");
 const Voucher = require("../voucher/model");
 const Category = require("../category/model");
@@ -24,6 +25,14 @@ module.exports = {
   detailPage: async (req, res) => {
     try {
       const { id } = req.params;
+
+      // Validasi ObjectId sebelum query
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res
+          .status(404)
+          .json({ message: "Voucher game tidak ditemukan." });
+      }
+
       const voucher = await Voucher.findById(id)
         .populate("category")
         .populate("nominals")
@@ -169,6 +178,25 @@ module.exports = {
       res.status(500).json({
         message: err.message || "Internal server error",
       });
+    }
+  },
+
+  detailHistory: async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      if (
+        !mongoose.Types.ObjectId.isValid(id) ||
+        !(await Transaction.findById(id))
+      ) {
+        return res.status(404).json({ message: "History tidak ditemukan." });
+      }
+
+      const history = await Transaction.findById(id);
+
+      res.status(200).json({ data: history });
+    } catch (err) {
+      res.status(500).json({ message: err.message || "Internal server error" });
     }
   },
 };
