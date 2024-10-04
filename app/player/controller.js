@@ -6,6 +6,9 @@ const Bank = require("../bank/model");
 const Payment = require("../payment/model");
 const Nominal = require("../nominal/model");
 const Transaction = require("../transaction/model");
+const path = require("path");
+const fs = require("fs");
+const config = require("../../config");
 
 module.exports = {
   landingPage: async (req, res) => {
@@ -16,9 +19,7 @@ module.exports = {
 
       res.status(200).json({ data: vouchers });
     } catch (err) {
-      res.status(500).json({
-        message: err.message || "Internal server error",
-      });
+      res.status(500).json({ message: err.message || "Internal server error" });
     }
   },
 
@@ -26,7 +27,6 @@ module.exports = {
     try {
       const { id } = req.params;
 
-      // Validasi ObjectId sebelum query
       if (!mongoose.Types.ObjectId.isValid(id)) {
         return res
           .status(404)
@@ -39,15 +39,12 @@ module.exports = {
         .populate("user", "_id name phoneNumber");
 
       if (!voucher) {
-        return res.status(404).json({
-          message: "Voucher game tidak ditemukan.",
-        });
+        return res
+          .status(404)
+          .json({ message: "Voucher game tidak ditemukan." });
       }
 
-      res.status(200).json({
-        status: "success",
-        data: voucher,
-      });
+      res.status(200).json({ status: "success", data: voucher });
     } catch (err) {
       res.status(500).json({
         status: "error",
@@ -61,9 +58,7 @@ module.exports = {
       const categories = await Category.find();
       res.status(200).json({ data: categories });
     } catch (err) {
-      res.status(500).json({
-        message: err.message || "Internal server error",
-      });
+      res.status(500).json({ message: err.message || "Internal server error" });
     }
   },
 
@@ -71,63 +66,57 @@ module.exports = {
     try {
       const { accountUser, name, nominal, voucher, payment, bank } = req.body;
 
-      const res_voucher = await Voucher.findOne({ _id: voucher })
+      const res_voucher = await Voucher.findById(voucher)
         .select("name category _id thumbnail user")
         .populate("category")
         .populate("user");
 
-      if (!res_voucher) {
-        return res.status(404).json({
-          message: "Voucher game tidak ditemukan.",
-        });
-      }
+      if (!res_voucher)
+        return res
+          .status(404)
+          .json({ message: "Voucher game tidak ditemukan." });
 
-      const res_nominal = await Nominal.findOne({ _id: nominal });
-      if (!res_nominal) {
+      const res_nominal = await Nominal.findById(nominal);
+      if (!res_nominal)
         return res.status(404).json({ message: "Nominal tidak ditemukan." });
-      }
 
-      const res_payment = await Payment.findOne({ _id: payment });
-      if (!res_payment) {
+      const res_payment = await Payment.findById(payment);
+      if (!res_payment)
         return res.status(404).json({ message: "Payment tidak ditemukan." });
-      }
 
-      const res_bank = await Bank.findOne({ _id: bank });
-      if (!res_bank) {
+      const res_bank = await Bank.findById(bank);
+      if (!res_bank)
         return res.status(404).json({ message: "Bank tidak ditemukan." });
-      }
 
-      const tax = (10 / 100) * res_nominal._doc.price;
-      const value = res_nominal._doc.price - tax;
+      const tax = (10 / 100) * res_nominal.price;
+      const value = res_nominal.price - tax;
 
       const payload = {
         historyVoucherTopup: {
-          gameName: res_voucher._doc.name,
-          category: res_voucher._doc.category
-            ? res_voucher._doc.category.name
-            : "",
-          thumbnail: res_voucher._doc.thumbnail,
-          coinName: res_nominal._doc.coinName,
-          coinQuantity: res_nominal._doc.coinQuantity,
-          price: res_nominal._doc.price,
+          gameName: res_voucher.name,
+          category: res_voucher.category ? res_voucher.category.name : "",
+          thumbnail: res_voucher.thumbnail,
+          coinName: res_nominal.coinName,
+          coinQuantity: res_nominal.coinQuantity,
+          price: res_nominal.price,
         },
         paymentHistory: {
-          name: res_bank._doc.name,
-          type: res_payment._doc.type,
-          bankName: res_bank._doc.bankName,
-          noRekening: res_bank._doc.noRekening,
+          name: res_bank.name,
+          type: res_payment.type,
+          bankName: res_bank.bankName,
+          noRekening: res_bank.noRekening,
         },
-        name: name,
-        accountUser: accountUser,
-        tax: tax,
-        value: value,
+        name,
+        accountUser,
+        tax,
+        value,
         player: req.player._id,
         userHistory: {
-          name: res_voucher._doc.user?.name,
-          phoneNumber: res_voucher._doc.user?.phoneNumber,
+          name: res_voucher.user?.name,
+          phoneNumber: res_voucher.user?.phoneNumber,
         },
-        category: res_voucher._doc.category?._id,
-        user: res_voucher._doc.user?._id,
+        category: res_voucher.category?._id,
+        user: res_voucher.user?._id,
       };
 
       const transaction = new Transaction(payload);
@@ -142,7 +131,7 @@ module.exports = {
   history: async (req, res) => {
     try {
       const { status = "" } = req.query;
-      let criteria = {};
+      let criteria = { player: req.player._id };
 
       if (status.length) {
         criteria = {
@@ -151,33 +140,17 @@ module.exports = {
         };
       }
 
-      if (req.player._id) {
-        criteria = {
-          ...criteria,
-          player: req.player._id,
-        };
-      }
-
       const history = await Transaction.find(criteria);
-
-      let total = await Transaction.aggregate([
+      const total = await Transaction.aggregate([
         { $match: criteria },
-        {
-          $group: {
-            _id: null,
-            value: { $sum: "$value" },
-          },
-        },
+        { $group: { _id: null, value: { $sum: "$value" } } },
       ]);
 
-      res.status(200).json({
-        data: history,
-        total: total.length ? total[0].value : 0,
-      });
+      res
+        .status(200)
+        .json({ data: history, total: total.length ? total[0].value : 0 });
     } catch (err) {
-      res.status(500).json({
-        message: err.message || "Internal server error",
-      });
+      res.status(500).json({ message: err.message || "Internal server error" });
     }
   },
 
@@ -185,30 +158,26 @@ module.exports = {
     try {
       const { id } = req.params;
 
-      if (
-        !mongoose.Types.ObjectId.isValid(id) ||
-        !(await Transaction.findById(id))
-      ) {
+      if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.status(404).json({ message: "History tidak ditemukan." });
       }
 
       const history = await Transaction.findById(id);
+      if (!history) {
+        return res.status(404).json({ message: "History tidak ditemukan." });
+      }
 
       res.status(200).json({ data: history });
     } catch (err) {
       res.status(500).json({ message: err.message || "Internal server error" });
     }
   },
+
   dashboard: async (req, res) => {
     try {
       const count = await Transaction.aggregate([
         { $match: { player: req.player._id } },
-        {
-          $group: {
-            _id: "$category",
-            value: { $sum: "$value" },
-          },
-        },
+        { $group: { _id: "$category", value: { $sum: "$value" } } },
       ]);
 
       const categories = await Category.find({});
@@ -231,6 +200,7 @@ module.exports = {
       res.status(500).json({ message: err.message || "Internal server error" });
     }
   },
+
   profile: async (req, res) => {
     try {
       const player = {
@@ -243,7 +213,95 @@ module.exports = {
       };
       res.status(200).json({ data: player });
     } catch (err) {
-      res.status(500).json({ message: err.message || `Internal server error` });
+      res.status(500).json({ message: err.message || "Internal server error" });
+    }
+  },
+
+  editProfile: async (req, res) => {
+    try {
+      const { name = "", phoneNumber = "", email = "" } = req.body;
+      const payload = {};
+
+      if (name.length) payload.name = name;
+      if (phoneNumber.length) payload.phoneNumber = phoneNumber;
+
+      if (email.length) {
+        const existingPlayer = await Player.findOne({
+          email,
+          _id: { $ne: req.player._id },
+        });
+        if (existingPlayer) {
+          return res.status(400).json({ message: "Email sudah terdaftar." });
+        }
+        payload.email = email;
+      }
+
+      if (req.file) {
+        const tmp_path = req.file.path;
+        const originalExt = path.extname(req.file.originalname);
+        const filename = `${req.file.filename}${originalExt}`;
+        const target_path = path.resolve(
+          config.rootPath,
+          `public/uploads/${filename}`
+        );
+
+        const src = fs.createReadStream(tmp_path);
+        const dest = fs.createWriteStream(target_path);
+
+        src.pipe(dest);
+
+        src.on("end", async () => {
+          let player = await Player.findById(req.player._id);
+          if (player.avatar) {
+            const currentImage = `${config.rootPath}/public/uploads/${player.avatar}`;
+            if (fs.existsSync(currentImage)) {
+              fs.unlinkSync(currentImage);
+            }
+          }
+
+          payload.avatar = filename;
+          player = await Player.findByIdAndUpdate(req.player._id, payload, {
+            new: true,
+            runValidators: true,
+          });
+
+          res.status(201).json({
+            data: {
+              id: player.id,
+              name: player.name,
+              phoneNumber: player.phoneNumber,
+              avatar: player.avatar,
+              email: player.email,
+            },
+          });
+        });
+
+        src.on("error", (err) => {
+          res
+            .status(500)
+            .json({ message: err.message || "Internal server error" });
+        });
+      } else {
+        const player = await Player.findByIdAndUpdate(req.player._id, payload, {
+          new: true,
+          runValidators: true,
+        });
+
+        res.status(201).json({
+          data: {
+            id: player.id,
+            name: player.name,
+            phoneNumber: player.phoneNumber,
+            avatar: player.avatar,
+            email: player.email,
+          },
+        });
+      }
+    } catch (err) {
+      if (err.name === "ValidationError") {
+        return res.status(400).json({ message: err.message });
+      }
+      res.status(500).json({ message: err.message || "Internal server error" });
     }
   },
 };
